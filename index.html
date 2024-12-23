@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Govt Calendar</title>
+    <style>
+        body {
+            font-family: "Times New Roman", serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fefefe;
+        }
+
+        .page {
+            border-left: 10px solid red;
+            border-right: 10px solid red;
+            padding: 0;
+            margin: 0;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #000;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+
+        header button {
+            background-color: #ef4123;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        header button:hover {
+            background-color: #d7321f;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            flex: 3;
+        }
+
+        .holiday-list {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+            padding: 15px;
+            max-width: 300px;
+            flex: 1;
+        }
+
+        .holiday-list h2 {
+            text-align: center;
+            color: black;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .holiday-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .holiday-list ul li {
+            padding: 5px;
+            font-size: 14px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .holiday-list ul li span {
+            font-weight: bold;
+        }
+
+        .month-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            text-align: center;
+        }
+
+        .month-title {
+            color: #ef4123;
+            padding: 10px 0;
+            font-size: 18px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .day-names,
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .day {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #ffffff;
+            font-size: 14px;
+        }
+
+        .holiday-ef4123 {
+            background-color: #ef4123;
+            color: white;
+            font-weight: bold;
+        }
+
+        .holiday-00aeef {
+            background-color: #00aeef;
+            color: white;
+            font-weight: bold;
+        }
+
+        .today {
+            background-color: #28a745;
+            /* Green for today's date */
+            font-weight: bold;
+            color: white;
+        }
+
+        .diwali {
+            background-color: #ff9933;
+            /* Saffron for Diwali */
+            font-weight: bold;
+            color: white;
+        }
+
+        .legend {
+            margin-top: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .legend div {
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .legend div span {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+        }
+
+        footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <header>
+            <button id="prevYear">&larr; Previous Year</button>
+            <div id="currentYearDisplay">Year: 2024</div>
+            <button id="nextYear">Next Year &rarr;</button>
+        </header>
+        <div class="container">
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <div class="holiday-list" id="holidayList">
+                <h2>Holiday List</h2>
+                <ul>
+                    <!-- Holiday list items will be added here dynamically -->
+                </ul>
+            </div>
+        </div>
+        <footer>© 2024 Government of Jammu and Kashmir</footer>
+    </div>
+    <script>
+        const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const months = [
+            { name: "January", days: 31 },
+            { name: "February", days: 29 },
+            { name: "March", days: 31 },
+            { name: "April", days: 30 },
+            { name: "May", days: 31 },
+            { name: "June", days: 30 },
+            { name: "July", days: 31 },
+            { name: "August", days: 31 },
+            { name: "September", days: 30 },
+            { name: "October", days: 31 },
+            { name: "November", days: 30 },
+            { name: "December", days: 31 }
+        ];
+
+        const holidays = [
+            { name: "Lohri (Jammu Province only)", date: "13th Jan", color: "#00aeef" },
+            { name: "Republic Day", date: "26th Jan", color: "#ef4123" }
+        ];
+
+        const dynamicFestivals = [
+            { name: "Diwali", year: 2024, date: "1 Nov", color: "#ff9933" },
+            { name: "Diwali", year: 2025, date: "20 Oct", color: "#ff9933" },
+            { name: "Makara Sankranti", year: 2025, date: "14 Jan", color: "#ff9933" },
+            { name: "Pongal", year: 2025, date: "14 Jan", color: "#ff9933" },
+            { name: "Kumbha Sankranti", year: 2025, date: "12 Feb", color: "#ff9933" },
+            { name: "Meena Sankranti", year: 2025, date: "14 Mar", color: "#ff9933" },
+            { name: "Mesha Sankranti", year: 2025, date: "14 Apr", color: "#ff9933" },
+            { name: "Solar New Year", year: 2025, date: "14 Apr", color: "#ff9933" },
+            { name: "Vrishabha Sankranti", year: 2025, date: "14 May", color: "#ff9933" },
+            { name: "Mithuna Sankranti", year: 2025, date: "15 Jun", color: "#ff9933" },
+            { name: "Karka Sankranti", year: 2025, date: "16 Jul", color: "#ff9933" },
+            { name: "Simha Sankranti", year: 2025, date: "17 Aug", color: "#ff9933" },
+            { name: "Vishwakarma Puja", year: 2025, date: "17 Sep", color: "#ff9933" },
+            { name: "Kanya Sankranti", year: 2025, date: "17 Oct", color: "#ff9933" },
+            { name: "Tula Sankranti", year: 2025, date: "17 Oct", color: "#ff9933" },
+            { name: "Vrishchika Sankranti", year: 2025, date: "16 Nov", color: "#ff9933" },
+            { name: "Dhanu Sankranti", year: 2025, date: "16 Dec", color: "#ff9933" },
+
+            { name: "Makara Sankranti", year: 2026, date: "14 Jan", color: "#ff9933" },
+            { name: "Pongal", year: 2026, date: "14 Jan", color: "#ff9933" },
+            { name: "Kumbha Sankranti", year: 2026, date: "13 Feb", color: "#ff9933" },
+            { name: "Meena Sankranti", year: 2026, date: "15 Mar", color: "#ff9933" },
+            { name: "Mesha Sankranti", year: 2026, date: "14 Apr", color: "#ff9933" },
+            { name: "Solar New Year", year: 2026, date: "14 Apr", color: "#ff9933" },
+            { name: "Vrishabha Sankranti", year: 2026, date: "15 May", color: "#ff9933" },
+            { name: "Mithuna Sankranti", year: 2026, date: "15 Jun", color: "#ff9933" },
+            { name: "Karka Sankranti", year: 2026, date: "16 Jul", color: "#ff9933" },
+            { name: "Simha Sankranti", year: 2026, date: "17 Aug", color: "#ff9933" },
+            { name: "Vishwakarma Puja", year: 2026, date: "17 Sep", color: "#ff9933" },
+            { name: "Kanya Sankranti", year: 2026, date: "17 Oct", color: "#ff9933" },
+            { name: "Tula Sankranti", year: 2026, date: "17 Oct", color: "#ff9933" },
+            { name: "Vrishchika Sankranti", year: 2026, date: "16 Nov", color: "#ff9933" },
+            { name: "Dhanu Sankranti", year: 2026, date: "16 Dec", color: "#ff9933" },
+
+            { name: "Makara Sankranti", year: 2027, date: "15 Jan", color: "#ff9933" },
+            { name: "Pongal", year: 2027, date: "15 Jan", color: "#ff9933" },
+            { name: "Kumbha Sankranti", year: 2027, date: "13 Feb", color: "#ff9933" },
+            { name: "Meena Sankranti", year: 2027, date: "15 Mar", color: "#ff9933" },
+            { name: "Mesha Sankranti", year: 2027, date: "14 Apr", color: "#ff9933" },
+            { name: "Solar New Year", year: 2027, date: "14 Apr", color: "#ff9933" },
+            { name: "Vrishabha Sankranti", year: 2027, date: "15 May", color: "#ff9933" },
+            { name: "Mithuna Sankranti", year: 2027, date: "15 Jun", color: "#ff9933" },
+            { name: "Karka Sankranti", year: 2027, date: "17 Jul", color: "#ff9933" },
+            { name: "Simha Sankranti", year: 2027, date: "17 Aug", color: "#ff9933" },
+            { name: "Vishwakarma Puja", year: 2027, date: "17 Sep", color: "#ff9933" },
+            { name: "Kanya Sankranti", year: 2027, date: "17 Oct", color: "#ff9933" },
+            { name: "Tula Sankranti", year: 2027, date: "18 Oct", color: "#ff9933" },
+            { name: "Vrishchika Sankranti", year: 2027, date: "17 Nov", color: "#ff9933" },
+            { name: "Dhanu Sankranti", year: 2027, date: "16 Dec", color: "#ff9933" },
+
+            { name: "Makara Sankranti", year: 2028, date: "15 Jan", color: "#ff9933" },
+            { name: "Pongal", year: 2028, date: "15 Jan", color: "#ff9933" },
+            { name: "Kumbha Sankranti", year: 2028, date: "13 Feb", color: "#ff9933" },
+            { name: "Meena Sankranti", year: 2028, date: "14 Mar", color: "#ff9933" },
+            { name: "Mesha Sankranti", year: 2028, date: "13 Apr", color: "#ff9933" },
+            { name: "Solar New Year", year: 2028, date: "13 Apr", color: "#ff9933" },
+            { name: "Vrishabha Sankranti", year: 2028, date: "14 May", color: "#ff9933" },
+            { name: "Mithuna Sankranti", year: 2028, date: "15 Jun", color: "#ff9933" },
+            { name: "Karka Sankranti", year: 2028, date: "16 Jul", color: "#ff9933" },
+            { name: "Simha Sankranti", year: 2028, date: "17 Aug", color: "#ff9933" },
+            { name: "Vishwakarma Puja", year: 2028, date: "16 Sep", color: "#ff9933" },
+            { name: "Kanya Sankranti", year: 2028, date: "16 Oct", color: "#ff9933" },
+            { name: "Tula Sankranti", year: 2028, date: "17 Oct", color: "#ff9933" },
+            { name: "Vrishchika Sankranti", year: 2028, date: "16 Nov", color: "#ff9933" },
+            { name: "Dhanu Sankranti", year: 2028, date: "15 Dec", color: "#ff9933" },
+
+            { name: "Makara Sankranti", year: 2029, date: "14 Jan", color: "#ff9933" },
+            { name: "Pongal", year: 2029, date: "14 Jan", color: "#ff9933" },
+            { name: "Kumbha Sankranti", year: 2029, date: "12 Feb", color: "#ff9933" },
+            { name: "Meena Sankranti", year: 2029, date: "14 Mar", color: "#ff9933" },
+            { name: "Mesha Sankranti", year: 2029, date: "14 Apr", color: "#ff9933" },
+            { name: "Solar New Year", year: 2029, date: "14 Apr", color: "#ff9933" },
+            { name: "Vrishabha Sankranti", year: 2029, date: "15 May", color: "#ff9933" },
+            { name: "Mithuna Sankranti", year: 2029, date: "15 Jun", color: "#ff9933" },
+            { name: "Karka Sankranti", year: 2029, date: "16 Jul", color: "#ff9933" },
+            { name: "Simha Sankranti", year: 2029, date: "17 Aug", color: "#ff9933" },
+            { name: "Vishwakarma Puja", year: 2029, date: "17 Sep", color: "#ff9933" },
+            { name: "Kanya Sankranti", year: 2029, date: "17 Oct", color: "#ff9933" },
+            { name: "Tula Sankranti", year: 2029, date: "17 Oct", color: "#ff9933" },
+            { name: "Vrishchika Sankranti", year: 2029, date: "16 Nov", color: "#ff9933" },
+            { name: "Dhanu Sankranti", year: 2029, date: "16 Dec", color: "#ff9933" },
+
+            { name: "Makara Sankranti", year: 2030, date: "14 Jan", color: "#ff9933" },
+            { name: "Pongal", year: 2030, date: "14 Jan", color: "#ff9933" },
+            { name: "Kumbha Sankranti", year: 2030, date: "13 Feb", color: "#ff9933" },
+            { name: "Meena Sankranti", year: 2030, date: "15 Mar", color: "#ff9933" },
+            { name: "Mesha Sankranti", year: 2030, date: "14 Apr", color: "#ff9933" },
+            { name: "Solar New Year", year: 2030, date: "14 Apr", color: "#ff9933" },
+            { name: "Vrishabha Sankranti", year: 2030, date: "15 May", color: "#ff9933" },
+            { name: "Mithuna Sankranti", year: 2030, date: "15 Jun", color: "#ff9933" },
+            { name: "Karka Sankranti", year: 2030, date: "16 Jul", color: "#ff9933" },
+            { name: "Simha Sankranti", year: 2030, date: "17 Aug", color: "#ff9933" },
+            { name: "Vishwakarma Puja", year: 2030, date: "17 Sep", color: "#ff9933" },
+            { name: "Kanya Sankranti", year: 2030, date: "17 Oct", color: "#ff9933" },
+            { name: "Tula Sankranti", year: 2030, date: "17 Oct", color: "#ff9933" },
+            { name: "Vrishchika Sankranti", year: 2030, date: "16 Nov", color: "#ff9933" },
+            { name: "Dhanu Sankranti", year: 2030, date: "16 Dec", color: "#ff9933" },
+            { name: "Pausha Purnima Vrat - Begins 05:03 AM, Jan 13, Ends 03:56 AM, Jan 14", year: 2025, date: "13 Jan", color: "#ff9933" },
+            { name: "Magha Purnima Vrat - Begins 06:55 PM, Feb 11, Ends 07:22 PM, Feb 12", year: 2025, date: "12 Feb", color: "#ff9933" },
+            { name: "Phalguna Purnima Vrat - Begins 10:35 AM, Mar 13, Ends 12:23 PM, Mar 14", year: 2025, date: "13 Mar", color: "#ff9933" },
+            { name: "Phalguna Purnima - Begins 10:35 AM, Mar 13, Ends 12:23 PM, Mar 14", year: 2025, date: "14 Mar", color: "#ff9933" },
+            { name: "Chaitra Purnima Vrat - Begins 03:21 AM, Apr 12, Ends 05:51 AM, Apr 13", year: 2025, date: "12 Apr", color: "#ff9933" },
+            { name: "Vaishakha Purnima Vrat - Begins 08:01 PM, May 11, Ends 10:25 PM, May 12", year: 2025, date: "12 May", color: "#ff9933" },
+            { name: "Jyeshtha Purnima Vrat - Begins 11:35 AM, Jun 10, Ends 01:13 PM, Jun 11", year: 2025, date: "10 Jun", color: "#ff9933" },
+            { name: "Jyeshtha Purnima - Begins 11:35 AM, Jun 10, Ends 01:13 PM, Jun 11", year: 2025, date: "11 Jun", color: "#ff9933" },
+            { name: "Ashadha Purnima Vrat - Begins 01:36 AM, Jul 10, Ends 02:06 AM, Jul 11", year: 2025, date: "10 Jul", color: "#ff9933" },
+            { name: "Shravana Purnima Vrat - Begins 02:12 PM, Aug 08, Ends 01:24 PM, Aug 09", year: 2025, date: "9 Aug", color: "#ff9933" },
+            { name: "Bhadrapada Purnima Vrat - Begins 01:41 AM, Sep 07, Ends 11:38 PM, Sep 07", year: 2025, date: "7 Sep", color: "#ff9933" },
+            { name: "Ashwina Purnima Vrat - Begins 12:23 PM, Oct 06, Ends 09:16 AM, Oct 07", year: 2025, date: "6 Oct", color: "#ff9933" },
+            { name: "Ashwina Purnima - Begins 12:23 PM, Oct 06, Ends 09:16 AM, Oct 07", year: 2025, date: "7 Oct", color: "#ff9933" },
+            { name: "Kartika Purnima Vrat - Begins 10:36 PM, Nov 04, Ends 06:48 PM, Nov 05", year: 2025, date: "5 Nov", color: "#ff9933" },
+            { name: "Margashirsha Purnima Vrat - Begins 08:37 AM, Dec 04, Ends 04:43 AM, Dec 05", year: 2025, date: "4 Dec", color: "#ff9933" },
+            { name: "Pausha Purnima Vrat - Begins 06:53 PM, Jan 02, Ends 03:32 PM, Jan 03", year: 2026, date: "3 Jan", color: "#ff9933" },
+            { name: "Magha Purnima Vrat - Begins 05:52 AM, Feb 01, Ends 03:38 AM, Feb 02", year: 2026, date: "1 Feb", color: "#ff9933" },
+            { name: "Phalguna Purnima Vrat - Begins 05:55 PM, Mar 02, Ends 05:07 PM, Mar 03", year: 2026, date: "3 Mar", color: "#ff9933" },
+            { name: "Chaitra Purnima Vrat - Begins 07:06 AM, Apr 01, Ends 07:41 AM, Apr 02", year: 2026, date: "1 Apr", color: "#ff9933" },
+            { name: "Chaitra Purnima - Begins 07:06 AM, Apr 01, Ends 07:41 AM, Apr 02", year: 2026, date: "2 Apr", color: "#ff9933" },
+            { name: "Vaishakha Purnima Vrat - Begins 09:12 PM, Apr 30, Ends 10:52 PM, May 01", year: 2026, date: "1 May", color: "#ff9933" },
+            { name: "Adhika Purnima Vrat - Begins 11:57 AM, May 30, Ends 02:14 PM, May 31", year: 2026, date: "30 May", color: "#ff9933" },
+            { name: "Jyeshtha Adhika Purnima - Begins 11:57 AM, May 30, Ends 02:14 PM, May 31", year: 2026, date: "31 May", color: "#ff9933" },
+            { name: "Jyeshtha Purnima Vrat - Begins 03:06 AM, Jun 29, Ends 05:26 AM, Jun 30", year: 2026, date: "29 Jun", color: "#ff9933" },
+            { name: "Ashadha Purnima Vrat - Begins 06:18 PM, Jul 28, Ends 08:05 PM, Jul 29", year: 2026, date: "29 Jul", color: "#ff9933" },
+            { name: "Shravana Purnima Vrat - Begins 09:08 AM, Aug 27, Ends 09:48 AM, Aug 28", year: 2026, date: "27 Aug", color: "#ff9933" },
+            { name: "Shravana Purnima - Begins 09:08 AM, Aug 27, Ends 09:48 AM, Aug 28", year: 2026, date: "28 Aug", color: "#ff9933" },
+            { name: "Bhadrapada Purnima Vrat - Begins 11:06 PM, Sep 25, Ends 10:18 PM, Sep 26", year: 2026, date: "26 Sep", color: "#ff9933" },
+            { name: "Ashwina Purnima Vrat - Begins 11:55 AM, Oct 25, Ends 09:41 AM, Oct 26", year: 2026, date: "25 Oct", color: "#ff9933" },
+            { name: "Ashwina Purnima - Begins 11:55 AM, Oct 25, Ends 09:41 AM, Oct 26", year: 2026, date: "26 Oct", color: "#ff9933" },
+            { name: "Kartika Purnima Vrat - Begins 11:42 PM, Nov 23, Ends 08:23 PM, Nov 24", year: 2026, date: "24 Nov", color: "#ff9933" },
+            { name: "Margashirsha Purnima Vrat - Begins 10:47 AM, Dec 23, Ends 06:57 AM, Dec 24", year: 2026, date: "23 Dec", color: "#ff9933" },
+            { name: "Pausha Purnima Vrat - Begins 09:29 PM, Jan 21, Ends 05:46 PM, Jan 22", year: 2027, date: "22 Jan", color: "#ff9933" },
+            { name: "Magha Purnima Vrat - Begins 07:59 AM, Feb 20, Ends 04:52 AM, Feb 21", year: 2027, date: "20 Feb", color: "#ff9933" },
+            { name: "Phalguna Purnima Vrat - Begins 06:21 PM, Mar 21, Ends 04:13 PM, Mar 22", year: 2027, date: "22 Mar", color: "#ff9933" },
+            { name: "Chaitra Purnima Vrat - Begins 04:51 AM, Apr 20, Ends 03:56 AM, Apr 21", year: 2027, date: "20 Apr", color: "#ff9933" },
+            { name: "Vaishakha Purnima Vrat - Begins 04:02 PM, May 19, Ends 04:28 PM, May 20", year: 2027, date: "20 May", color: "#ff9933" },
+            { name: "Jyeshtha Purnima Vrat - Begins 08:11 AM, Jun 18, Ends 07:31 AM, Jun 19", year: 2027, date: "18 Jun", color: "#ff9933" },
+            { name: "Ashadha Purnima Vrat - Begins 09:25 PM, Jul 17, Ends 07:50 PM, Jul 18", year: 2027, date: "18 Jul", color: "#ff9933" },
+            { name: "Shravana Purnima Vrat - Begins 11:10 AM, Aug 15, Ends 08:31 AM, Aug 16", year: 2027, date: "16 Aug", color: "#ff9933" },
+            { name: "Shravana Purnima - Begins 11:10 AM, Aug 15, Ends 08:31 AM, Aug 16", year: 2027, date: "17 Aug", color: "#ff9933" },
+            { name: "Bhadrapada Purnima Vrat - Begins 08:49 PM, Sep 14, Ends 05:48 PM, Sep 15", year: 2027, date: "15 Sep", color: "#ff9933" },
+            { name: "Ashwina Purnima Vrat - Begins 02:31 PM, Oct 14, Ends 01:27 PM, Oct 15", year: 2027, date: "15 Oct", color: "#ff9933" },
+            { name: "Kartika Purnima Vrat - Begins 02:35 PM, Nov 12, Ends 01:25 PM, Nov 13", year: 2027, date: "13 Nov", color: "#ff9933" },
+            { name: "Kartika Purnima - Begins 02:35 PM, Nov 12, Ends 01:25 PM, Nov 13", year: 2027, date: "14 Nov", color: "#ff9933" },
+            { name: "Margashirsha Purnima Vrat - Begins 06:22 AM, Dec 12, Ends 04:33 AM, Dec 13", year: 2027, date: "13 Dec", color: "#ff9933" },
+            { name: "Pausha Purnima Vrat - Begins 06:45 AM, Jan 10, Ends 04:24 AM, Jan 11", year: 2028, date: "11 Jan", color: "#ff9933" },
+
+
+        ];
+
+        let currentYear = 2024;
+
+        const today = new Date();
+        const todayYear = today.getFullYear();
+        const todayMonth = today.getMonth();
+        const todayDate = today.getDate();
+
+        const calendarGrid = document.getElementById("calendarGrid");
+        const holidayList = document.getElementById("holidayList").querySelector("ul");
+        const currentYearDisplay = document.getElementById("currentYearDisplay");
+        const prevYearButton = document.getElementById("prevYear");
+        const nextYearButton = document.getElementById("nextYear");
+
+        function renderFullCalendar() {
+            calendarGrid.innerHTML = ""; // Clear the calendar grid
+            currentYearDisplay.innerText = `Year: ${currentYear}`;
+
+            months.forEach((month, monthIndex) => {
+                const monthCard = document.createElement("div");
+                monthCard.className = "month-card";
+
+                const title = document.createElement("div");
+                title.className = "month-title";
+                title.innerText = month.name;
+                monthCard.appendChild(title);
+
+                const dayNamesRow = document.createElement("div");
+                dayNamesRow.className = "day-names";
+                daysOfWeek.forEach(day => {
+                    const dayName = document.createElement("div");
+                    dayName.innerText = day;
+                    dayNamesRow.appendChild(dayName);
+                });
+                monthCard.appendChild(dayNamesRow);
+
+                const daysGrid = document.createElement("div");
+                daysGrid.className = "days-grid";
+
+                const firstDay = new Date(currentYear, monthIndex, 1).getDay();
+
+                for (let i = 0; i < firstDay; i++) {
+                    const emptyDiv = document.createElement("div");
+                    emptyDiv.className = "day";
+                    daysGrid.appendChild(emptyDiv);
+                }
+
+                for (let day = 1; day <= month.days; day++) {
+                    const dayDiv = document.createElement("div");
+                    dayDiv.className = "day";
+                    const formattedDate = `${day} ${month.name.slice(0, 3)}`;
+                    const holiday = holidays.find(h => h.date === `${day}th ${month.name.slice(0, 3)}`);
+                    const dynamicFestival = dynamicFestivals.find(f => f.year === currentYear && f.date === `${day} ${month.name.slice(0, 3)}`);
+
+                    if (holiday) {
+                        dayDiv.classList.add("holiday-ef4123");
+                        dayDiv.style.backgroundColor = holiday.color;
+                    }
+                    if (dynamicFestival) {
+                        dayDiv.classList.add("diwali");
+                        dayDiv.title = dynamicFestival.name; // Tooltip for dynamic festival
+                    }
+                    if (currentYear === todayYear && monthIndex === todayMonth && day === todayDate) {
+                        dayDiv.classList.add("today");
+                    }
+                    dayDiv.innerText = day;
+                    daysGrid.appendChild(dayDiv);
+                }
+
+                monthCard.appendChild(daysGrid);
+                calendarGrid.appendChild(monthCard);
+            });
+        }
+
+        function renderHolidayList() {
+            holidayList.innerHTML = ""; // Clear existing holiday list
+
+            holidays.concat(dynamicFestivals.filter(f => f.year === currentYear)).forEach(holiday => {
+                const listItem = document.createElement("li");
+                listItem.innerHTML = `<span>${holiday.date}:</span> ${holiday.name}`;
+                listItem.style.color = holiday.color;
+                holidayList.appendChild(listItem);
+            });
+        }
+
+        prevYearButton.addEventListener("click", () => {
+            currentYear--;
+            renderFullCalendar();
+            renderHolidayList();
+        });
+
+        nextYearButton.addEventListener("click", () => {
+            currentYear++;
+            renderFullCalendar();
+            renderHolidayList();
+        });
+
+        renderFullCalendar();
+        renderHolidayList();
+    </script>
+</body>
+
+</html>
